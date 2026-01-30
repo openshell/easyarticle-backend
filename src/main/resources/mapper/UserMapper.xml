@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easyarticle.repository.IUserMapper">
+
+    <!-- 插入用户 -->
+    <insert id="insert" parameterType="com.easyarticle.entity.User">
+        INSERT INTO users (username, email, password, created_at, updated_at)
+        VALUES (#{username}, #{email}, #{password}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    </insert>
+
+    <!-- 根据邮箱查找用户 -->
+    <select id="findByEmail" resultType="com.easyarticle.entity.User">
+        SELECT * FROM users WHERE email = #{email}
+    </select>
+
+    <!-- 根据用户名查找用户 -->
+    <select id="findByUsername" resultType="com.easyarticle.entity.User">
+        SELECT * FROM users WHERE username = #{username}
+    </select>
+
+    <!-- 检查邮箱是否存在 -->
+    <select id="existsByEmail" resultType="java.lang.Boolean">
+        SELECT COUNT(*) > 0 FROM users WHERE email = #{email}
+    </select>
+
+    <!-- 检查用户名是否存在 -->
+    <select id="existsByUsername" resultType="java.lang.Boolean">
+        SELECT COUNT(*) > 0 FROM users WHERE username = #{username}
+    </select>
+
+</mapper>

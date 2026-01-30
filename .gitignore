@@ -1,0 +1,15 @@
+# Project exclude paths
+/caiqz-study-basic/target/
+.idea
+*.iml
+*.log
+*.json
+out
+gen
+**/target/
+**/data/
+*-dem/
+**/logs/
+
+# 忽略spring-ai-langchain4j模块的本地配置文件
+.env

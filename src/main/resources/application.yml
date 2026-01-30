@@ -1,0 +1,23 @@
+server:
+  # 服务器配置
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: ${datasource_url}
+    username: ${datasource_passwd}
+    password: 3bPAAdCrJN3jCAt4
+  security:
+    # 安全配置
+    enabled: true
+# MyBatis-Plus配置
+mybatis-plus:
+  mapper-locations: classpath:mapper/**/*.xml
+jwt:
+  # JWT配置
+  secret: your-secret-key-here
+  expiration: 86400000
