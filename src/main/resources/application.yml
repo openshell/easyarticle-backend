@@ -25,5 +25,5 @@ mybatis-plus:
 
 # JWT配置
 jwt:
-  secret: your-secret-key-here
+  secret: Vdv8FBR4BE1F3PaXaPNFe4crgkPIGPn3
   expiration: 86400000

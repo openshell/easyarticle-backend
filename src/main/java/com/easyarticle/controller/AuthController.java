@@ -104,19 +104,23 @@ public class AuthController {
     })
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(@Parameter(description = "授权请求头，格式为Bearer token", required = true) @RequestHeader("Authorization") String authorizationHeader) {
-        // 从请求头中获取token
-        String token = authorizationHeader.substring(7); // 移除"Bearer "前缀
+        try {
+            // 从请求头中获取token
+            String token = authorizationHeader.substring(7); // 移除"Bearer "前缀
 
-        // 从token中获取用户名
-        String email = jwtUtil.extractUsername(token);
+            // 从token中获取用户名
+            String email = jwtUtil.extractUsername(token);
 
-        // 获取用户信息
-        User user = iUserMapper.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("User not found"));
+            // 获取用户信息
+            User user = iUserMapper.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // 构建响应
-        UserResponse userResponse = new UserResponse(user.getId(), user.getUsername(), user.getEmail());
+            // 构建响应
+            UserResponse userResponse = new UserResponse(user.getId(), user.getUsername(), user.getEmail());
 
-        return ResponseEntity.ok(userResponse);
+            return ResponseEntity.ok(userResponse);
+        } catch (io.jsonwebtoken.MalformedJwtException | io.jsonwebtoken.ExpiredJwtException | io.jsonwebtoken.UnsupportedJwtException | IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
+        }
     }
 
     /**

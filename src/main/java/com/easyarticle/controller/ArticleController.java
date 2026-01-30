@@ -69,6 +69,16 @@ public class ArticleController {
     }
 
     /**
+     * 测试接口
+     * @return ApiResponse 响应对象
+     */
+    @Operation(summary = "测试接口", description = "测试JWT认证过滤器是否正常工作")
+    @GetMapping("/test")
+    public ApiResult<String> test() {
+        return ApiResult.success("Test successful");
+    }
+
+    /**
      * 获取单个文章
      * @param id 文章ID
      * @param authorizationHeader 授权请求头

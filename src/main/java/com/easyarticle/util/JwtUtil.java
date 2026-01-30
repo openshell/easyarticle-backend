@@ -1,12 +1,12 @@
 package com.easyarticle.util;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +24,22 @@ public class JwtUtil {
 
     @Value("${jwt.expiration}")
     private long expiration;
+    
+    private byte[] secretBytes;
+    
+    @PostConstruct
+    public void init() {
+        // 确保密钥长度足够，至少32字节用于HS256
+        if (secret.length() < 32) {
+            // 使用密钥扩展技术确保足够的长度
+            StringBuilder extendedSecret = new StringBuilder(secret);
+            while (extendedSecret.length() < 32) {
+                extendedSecret.append(secret);
+            }
+            secret = extendedSecret.toString().substring(0, 32);
+        }
+        secretBytes = secret.getBytes(StandardCharsets.UTF_8);
+    }
 
     /**
      * 从token中获取用户名
@@ -61,7 +77,28 @@ public class JwtUtil {
      * @return Claims 所有声明
      */
     private Claims extractAllClaims(String token) {
-        return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(secretBytes)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException ex) {
+            System.out.println("Invalid JWT signature: " + ex.getMessage());
+            throw new MalformedJwtException("Invalid JWT token");
+        } catch (ExpiredJwtException ex) {
+            System.out.println("JWT token is expired: " + ex.getMessage());
+            throw new ExpiredJwtException(null, null, "Expired JWT token");
+        } catch (UnsupportedJwtException ex) {
+            System.out.println("JWT token is unsupported: " + ex.getMessage());
+            throw new UnsupportedJwtException("Unsupported JWT token");
+        } catch (IllegalArgumentException ex) {
+            System.out.println("JWT claims string is empty: " + ex.getMessage());
+            throw new IllegalArgumentException("JWT claims string is empty");
+        } catch (Exception ex) {
+            System.out.println("Error parsing JWT token: " + ex.getMessage());
+            throw new RuntimeException("Error parsing JWT token", ex);
+        }
     }
 
     /**
@@ -90,8 +127,13 @@ public class JwtUtil {
      * @return String JWT令牌
      */
     private String createToken(Map<String, Object> claims, String subject) {
-        return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + expiration)).signWith(SignatureAlgorithm.HS256, secret).compact();
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(subject)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(SignatureAlgorithm.HS256, secret.getBytes())
+                .compact();
     }
 
     /**
