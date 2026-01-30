@@ -1,5 +1,6 @@
 package com.easyarticle.util;
 
+import com.easyarticle.constant.Constants;
 import io.jsonwebtoken.*;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
@@ -118,6 +119,28 @@ public class JwtUtil {
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         return createToken(claims, userDetails.getUsername());
+    }
+
+    /**
+     * 生成token，包含用户ID
+     * @param userDetails 用户详情
+     * @param userId 用户ID
+     * @return String JWT令牌
+     */
+    public String generateToken(UserDetails userDetails, Long userId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(Constants.JWT.USER_ID_CLAIM, userId);
+        return createToken(claims, userDetails.getUsername());
+    }
+
+    /**
+     * 从token中获取用户ID
+     * @param token JWT令牌
+     * @return Long 用户ID
+     */
+    public Long extractUserId(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.get(Constants.JWT.USER_ID_CLAIM, Long.class);
     }
 
     /**

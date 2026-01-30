@@ -1,9 +1,10 @@
 package com.easyarticle.controller;
 
+import com.easyarticle.constant.Constants;
 import com.easyarticle.dto.ApiResult;
+import com.easyarticle.dto.ArticleRequestDTO;
+import com.easyarticle.dto.ArticleResponseDTO;
 import com.easyarticle.entity.Article;
-import com.easyarticle.entity.User;
-import com.easyarticle.repository.IUserMapper;
 import com.easyarticle.service.ArticleService;
 import com.easyarticle.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,7 +32,6 @@ public class ArticleController {
 
     private final ArticleService articleService;
     private final JwtUtil jwtUtil;
-    private final IUserMapper iUserMapper;
 
     /**
      * 从Authorization头中获取用户ID
@@ -39,10 +39,8 @@ public class ArticleController {
      * @return Long 用户ID
      */
     private Long getUserIdFromToken(String authorizationHeader) {
-        String token = authorizationHeader.substring(7); // 移除"Bearer "前缀
-        String email = jwtUtil.extractUsername(token);
-        User user = iUserMapper.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("User not found"));
-        return user.getId();
+        String token = authorizationHeader.substring(Constants.JWT.BEARER_PREFIX_LENGTH); // 移除"Bearer "前缀
+        return jwtUtil.extractUserId(token);
     }
 
     /**
@@ -57,15 +55,18 @@ public class ArticleController {
              @ApiResponse(responseCode  = "500", description ="服务器内部错误")
     })
     @GetMapping("/list")
-    public ApiResult<List<Article>> getUserArticles(@Parameter(description = "授权请求头，格式为Bearer token", required = true) @RequestHeader("Authorization") String authorizationHeader) {
-        try {
-            Long userId = getUserIdFromToken(authorizationHeader);
-            List<Article> articles = articleService.getUserArticles(userId);
-            return ApiResult.success(articles);
-        } catch (Exception e) {
-            log.error("Error getting user articles: {}", e.getMessage());
-            return ApiResult.fail("Failed to get articles");
-        }
+    public ApiResult<List<ArticleResponseDTO>> getUserArticles(@Parameter(description = "授权请求头，格式为Bearer token", required = true) @RequestHeader("Authorization") String authorizationHeader) {
+        Long userId = getUserIdFromToken(authorizationHeader);
+        List<Article> articles = articleService.getUserArticles(userId);
+        List<ArticleResponseDTO> responseDTOS = articles.stream()
+                .map(article -> new ArticleResponseDTO(
+                        article.getId(),
+                        article.getTitle(),
+                        article.getContent(),
+                        article.getCreatedAt(),
+                        article.getUpdatedAt()))
+                .collect(java.util.stream.Collectors.toList());
+        return ApiResult.success(responseDTOS);
     }
 
     /**
@@ -92,18 +93,17 @@ public class ArticleController {
          @ApiResponse(responseCode = "500", description = "获取失败，服务器内部错误")
     })
     @GetMapping("/{id}")
-    public ApiResult<Article> getArticle(@Parameter(description = "文章ID", required = true) @PathVariable Long id, @Parameter(description = "授权请求头，格式为Bearer token", required = true) @RequestHeader("Authorization") String authorizationHeader) {
-        try {
-            Long userId = getUserIdFromToken(authorizationHeader);
-            Article article = articleService.getUserArticle(userId, id)
-                    .orElseThrow(() -> new IllegalArgumentException("Article not found"));
-            return ApiResult.success(article);
-        } catch (IllegalArgumentException e) {
-            return ApiResult.fail(404, e.getMessage());
-        } catch (Exception e) {
-            log.error("Error getting article: {}", e.getMessage());
-            return ApiResult.fail("Failed to get article");
-        }
+    public ApiResult<ArticleResponseDTO> getArticle(@Parameter(description = "文章ID", required = true) @PathVariable Long id, @Parameter(description = "授权请求头，格式为Bearer token", required = true) @RequestHeader("Authorization") String authorizationHeader) {
+        Long userId = getUserIdFromToken(authorizationHeader);
+        Article article = articleService.getUserArticle(userId, id)
+                .orElseThrow(() -> new IllegalArgumentException("Article not found"));
+        ArticleResponseDTO responseDTO = new ArticleResponseDTO(
+                article.getId(),
+                article.getTitle(),
+                article.getContent(),
+                article.getCreatedAt(),
+                article.getUpdatedAt());
+        return ApiResult.success(responseDTO);
     }
 
     /**
@@ -119,16 +119,20 @@ public class ArticleController {
          @ApiResponse(responseCode = "500", description = "创建失败，服务器内部错误")
     })
     @PostMapping
-    public ApiResult<Article> createArticle(@Parameter(description = "文章实体", required = true) @RequestBody Article article, @Parameter(description = "授权请求头，格式为Bearer token", required = true) @RequestHeader("Authorization") String authorizationHeader) {
-        try {
-            Long userId = getUserIdFromToken(authorizationHeader);
-            article.setUserId(userId);
-            articleService.createArticle(article);
-            return ApiResult.success(article);
-        } catch (Exception e) {
-            log.error("Error creating article: {}", e.getMessage());
-            return ApiResult.fail("Failed to create article");
-        }
+    public ApiResult<ArticleResponseDTO> createArticle(@Parameter(description = "文章请求参数", required = true) @RequestBody ArticleRequestDTO articleRequestDTO, @Parameter(description = "授权请求头，格式为Bearer token", required = true) @RequestHeader("Authorization") String authorizationHeader) {
+        Long userId = getUserIdFromToken(authorizationHeader);
+        Article article = new Article();
+        article.setUserId(userId);
+        article.setTitle(articleRequestDTO.getTitle());
+        article.setContent(articleRequestDTO.getContent());
+        articleService.createArticle(article);
+        ArticleResponseDTO responseDTO = new ArticleResponseDTO(
+                article.getId(),
+                article.getTitle(),
+                article.getContent(),
+                article.getCreatedAt(),
+                article.getUpdatedAt());
+        return ApiResult.success(responseDTO);
     }
 
     /**
@@ -146,25 +150,24 @@ public class ArticleController {
          @ApiResponse(responseCode = "500", description = "更新失败，服务器内部错误")
     })
     @PutMapping("/update/{id}")
-    public ApiResult<Article> updateArticle(@Parameter(description = "文章ID", required = true) @PathVariable Long id, @Parameter(description = "文章实体", required = true) @RequestBody Article article, @Parameter(description = "授权请求头，格式为Bearer token", required = true) @RequestHeader("Authorization") String authorizationHeader) {
-        try {
-            Long userId = getUserIdFromToken(authorizationHeader);
-            // 验证文章是否存在且属于当前用户
-            Article existingArticle = articleService.getUserArticle(userId, id)
-                    .orElseThrow(() -> new IllegalArgumentException("Article not found"));
-            
-            // 更新文章
-            existingArticle.setTitle(article.getTitle());
-            existingArticle.setContent(article.getContent());
-            articleService.updateArticle(existingArticle);
-            
-            return ApiResult.success(existingArticle);
-        } catch (IllegalArgumentException e) {
-            return ApiResult.fail(404, e.getMessage());
-        } catch (Exception e) {
-            log.error("Error updating article: {}", e.getMessage());
-            return ApiResult.fail("Failed to update article");
-        }
+    public ApiResult<ArticleResponseDTO> updateArticle(@Parameter(description = "文章ID", required = true) @PathVariable Long id, @Parameter(description = "文章请求参数", required = true) @RequestBody ArticleRequestDTO articleRequestDTO, @Parameter(description = "授权请求头，格式为Bearer token", required = true) @RequestHeader("Authorization") String authorizationHeader) {
+        Long userId = getUserIdFromToken(authorizationHeader);
+        // 验证文章是否存在且属于当前用户
+        Article existingArticle = articleService.getUserArticle(userId, id)
+                .orElseThrow(() -> new IllegalArgumentException("Article not found"));
+        
+        // 更新文章
+        existingArticle.setTitle(articleRequestDTO.getTitle());
+        existingArticle.setContent(articleRequestDTO.getContent());
+        articleService.updateArticle(existingArticle);
+        
+        ArticleResponseDTO responseDTO = new ArticleResponseDTO(
+                existingArticle.getId(),
+                existingArticle.getTitle(),
+                existingArticle.getContent(),
+                existingArticle.getCreatedAt(),
+                existingArticle.getUpdatedAt());
+        return ApiResult.success(responseDTO);
     }
 
     /**
@@ -182,22 +185,15 @@ public class ArticleController {
     })
     @DeleteMapping("/delete/{id}")
     public ApiResult<String> deleteArticle(@Parameter(description = "文章ID", required = true) @PathVariable Long id, @Parameter(description = "授权请求头，格式为Bearer token", required = true) @RequestHeader("Authorization") String authorizationHeader) {
-        try {
-            Long userId = getUserIdFromToken(authorizationHeader);
-            // 验证文章是否存在且属于当前用户
-            Article existingArticle = articleService.getUserArticle(userId, id)
-                    .orElseThrow(() -> new IllegalArgumentException("Article not found"));
-            
-            // 删除文章
-            articleService.deleteArticle(id);
-            
-            return ApiResult.success("Article deleted successfully");
-        } catch (IllegalArgumentException e) {
-            return ApiResult.fail(404, e.getMessage());
-        } catch (Exception e) {
-            log.error("Error deleting article: {}", e.getMessage());
-            return ApiResult.fail("Failed to delete article");
-        }
+        Long userId = getUserIdFromToken(authorizationHeader);
+        // 验证文章是否存在且属于当前用户
+        articleService.getUserArticle(userId, id)
+                .orElseThrow(() -> new IllegalArgumentException("Article not found"));
+        
+        // 删除文章
+        articleService.deleteArticle(id);
+        
+        return ApiResult.success("Article deleted successfully");
     }
 
 }

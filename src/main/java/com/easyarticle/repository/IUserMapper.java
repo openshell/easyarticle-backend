@@ -47,4 +47,11 @@ public interface IUserMapper {
      */
     boolean existsByUsername(@Param("username") String username);
 
+    /**
+     * 根据ID查找用户
+     * @param id 用户ID
+     * @return Optional<User> 用户 Optional 对象
+     */
+    Optional<User> findById(@Param("id") Long id);
+
 }

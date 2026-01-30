@@ -1,15 +1,11 @@
 package com.easyarticle.controller;
 
+import com.easyarticle.dto.ApiResult;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 全局异常处理器
@@ -22,50 +18,37 @@ public class GlobalExceptionHandler {
     /**
      * 处理认证异常
      * @param e BadCredentialsException 认证异常
-     * @return ResponseEntity 响应实体
+     * @return ApiResult 响应对象
      */
     @ExceptionHandler(BadCredentialsException.class)
     @ResponseBody
-    public ResponseEntity<?> handleBadCredentialsException(BadCredentialsException e) {
+    public ApiResult<?> handleBadCredentialsException(BadCredentialsException e) {
         log.error("Authentication error: ", e);
-        return createErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid email or password");
+        return ApiResult.fail(401, "Invalid email or password");
     }
 
     /**
      * 处理非法参数异常
      * @param e IllegalArgumentException 非法参数异常
-     * @return ResponseEntity 响应实体
+     * @return ApiResult 响应对象
      */
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseBody
-    public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException e) {
+    public ApiResult<?> handleIllegalArgumentException(IllegalArgumentException e) {
         log.error("Invalid argument error: ", e);
-        return createErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
+        return ApiResult.fail(400, e.getMessage());
     }
 
     /**
      * 处理通用异常
      * @param e Exception 通用异常
-     * @return ResponseEntity 响应实体
+     * @return ApiResult 响应对象
      */
     @ExceptionHandler(Exception.class)
     @ResponseBody
-    public ResponseEntity<?> handleException(Exception e) {
+    public ApiResult<?> handleException(Exception e) {
         log.error("Internal server error: ", e);
-        return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
-    }
-
-    /**
-     * 创建错误响应
-     * @param status HTTP状态码
-     * @param message 错误信息
-     * @return ResponseEntity 响应实体
-     */
-    private ResponseEntity<?> createErrorResponse(HttpStatus status, String message) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("code", status.value());
-        response.put("message", message);
-        response.put("data", null);
-        return ResponseEntity.status(status).body(response);
+        return ApiResult.fail(500, "Internal server error");
     }
 }
+

@@ -30,4 +30,9 @@
         SELECT COUNT(*) > 0 FROM users WHERE username = #{username}
     </select>
 
+    <!-- 根据ID查找用户 -->
+    <select id="findById" resultType="com.easyarticle.entity.User">
+        SELECT * FROM users WHERE id = #{id}
+    </select>
+
 </mapper>

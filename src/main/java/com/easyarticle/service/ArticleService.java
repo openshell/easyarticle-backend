@@ -2,6 +2,7 @@ package com.easyarticle.service;
 
 import com.easyarticle.entity.Article;
 import com.easyarticle.repository.IArticleMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,17 +13,10 @@ import java.util.Optional;
  * 提供文章相关的业务逻辑方法
  */
 @Service
+@RequiredArgsConstructor
 public class ArticleService {
 
     private final IArticleMapper iArticleMapper;
-
-    /**
-     * 构造方法
-     * @param iArticleMapper 文章Mapper
-     */
-    public ArticleService(IArticleMapper iArticleMapper) {
-        this.iArticleMapper = iArticleMapper;
-    }
 
     /**
      * 创建文章
