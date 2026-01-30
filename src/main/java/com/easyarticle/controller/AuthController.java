@@ -1,5 +1,8 @@
 package com.easyarticle.controller;
 
+import com.easyarticle.dto.LoginRequest;
+import com.easyarticle.dto.RegisterRequest;
+import com.easyarticle.dto.UserResponse;
 import com.easyarticle.entity.User;
 import com.easyarticle.repository.IUserMapper;
 import com.easyarticle.service.UserDetailsServiceImpl;
@@ -141,98 +144,6 @@ public class AuthController {
         UserResponse userResponse = new UserResponse(user.getId(), user.getUsername(), user.getEmail());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(userResponse);
-    }
-
-    // 请求和响应类
-    public static class LoginRequest {
-        private String email;
-        private String password;
-
-        // Getter和Setter方法
-        public String getEmail() {
-            return email;
-        }
-
-        public void setEmail(String email) {
-            this.email = email;
-        }
-
-        public String getPassword() {
-            return password;
-        }
-
-        public void setPassword(String password) {
-            this.password = password;
-        }
-    }
-
-    public static class RegisterRequest {
-        private String username;
-        private String email;
-        private String password;
-
-        // Getter和Setter方法
-        public String getUsername() {
-            return username;
-        }
-
-        public void setUsername(String username) {
-            this.username = username;
-        }
-
-        public String getEmail() {
-            return email;
-        }
-
-        public void setEmail(String email) {
-            this.email = email;
-        }
-
-        public String getPassword() {
-            return password;
-        }
-
-        public void setPassword(String password) {
-            this.password = password;
-        }
-    }
-
-    public static class UserResponse {
-        private Long id;
-        private String username;
-        private String email;
-
-        // 构造方法
-        public UserResponse(Long id, String username, String email) {
-            this.id = id;
-            this.username = username;
-            this.email = email;
-        }
-
-        // Getter和Setter方法
-        public Long getId() {
-            return id;
-        }
-
-        public void setId(Long id) {
-            this.id = id;
-        }
-
-        public String getUsername() {
-            return username;
-        }
-
-        public void setUsername(String username) {
-            this.username = username;
-        }
-
-        public String getEmail() {
-            return email;
-        }
-
-        public void setEmail(String email) {
-            this.email = email;
-        }
     }
 
 }
