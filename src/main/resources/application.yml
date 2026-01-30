@@ -1,12 +1,10 @@
-server:
-  # 服务器配置
-  port: 8080
-  servlet:
-    context-path: /api
-
 spring:
+  # 环境配置，默认使用开发环境
+  profiles:
+    active: dev
   config:
     import: optional:file:.env[.properties]
+  # 公共配置
   datasource:
     url: ${datasource_url}
     username: easyarticle
@@ -14,10 +12,18 @@ spring:
   security:
     # 安全配置
     enabled: true
+
+# 服务器配置
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
 # MyBatis-Plus配置
 mybatis-plus:
   mapper-locations: classpath:mapper/**/*.xml
+
+# JWT配置
 jwt:
-  # JWT配置
   secret: your-secret-key-here
   expiration: 86400000

@@ -64,6 +64,10 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/auth/**").permitAll()
+                // 允许访问swagger-ui相关路径
+                .requestMatchers( "/doc.html/**","/webjars/**",
+                        "/v3/api-docs/**","/swagger-ui/**",  "/api-docs/**", "/v2/api-docs",
+                        "/swagger-resources/**").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session

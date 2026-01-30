@@ -6,7 +6,7 @@ import lombok.Data;
  * API响应统一格式类
  */
 @Data
-public class ApiResponse<T> {
+public class ApiResult<T> {
 
     /**
      * 响应码
@@ -31,8 +31,8 @@ public class ApiResponse<T> {
      * @param <T> 数据类型
      * @return ApiResponse 响应对象
      */
-    public static <T> ApiResponse<T> success(T data) {
-        ApiResponse<T> response = new ApiResponse<>();
+    public static <T> ApiResult<T> success(T data) {
+        ApiResult<T> response = new ApiResult<>();
         response.setCode(1000);
         response.setMessage("success");
         response.setData(data);
@@ -44,7 +44,7 @@ public class ApiResponse<T> {
      * @param <T> 数据类型
      * @return ApiResponse 响应对象
      */
-    public static <T> ApiResponse<T> success() {
+    public static <T> ApiResult<T> success() {
         return success(null);
     }
 
@@ -55,8 +55,8 @@ public class ApiResponse<T> {
      * @param <T> 数据类型
      * @return ApiResponse 响应对象
      */
-    public static <T> ApiResponse<T> fail(int code, String message) {
-        ApiResponse<T> response = new ApiResponse<>();
+    public static <T> ApiResult<T> fail(int code, String message) {
+        ApiResult<T> response = new ApiResult<>();
         response.setCode(code);
         response.setMessage(message);
         response.setData(null);
@@ -69,7 +69,7 @@ public class ApiResponse<T> {
      * @param <T> 数据类型
      * @return ApiResponse 响应对象
      */
-    public static <T> ApiResponse<T> fail(String message) {
+    public static <T> ApiResult<T> fail(String message) {
         return fail(5000, message);
     }
 

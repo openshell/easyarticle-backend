@@ -7,6 +7,11 @@ import com.easyarticle.entity.User;
 import com.easyarticle.repository.IUserMapper;
 import com.easyarticle.service.UserDetailsServiceImpl;
 import com.easyarticle.util.JwtUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +32,7 @@ import java.util.Map;
 @RestController
 @CrossOrigin(origins = "*")
 @RequestMapping("/auth")
+@Tag(name = "认证管理", description = "用户登录、注册、登出和获取用户信息等操作")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -57,8 +63,13 @@ public class AuthController {
      * @param loginRequest 登录请求
      * @return ResponseEntity 响应实体
      */
+    @Operation(summary = "用户登录", description = "用户登录接口，返回JWT token和用户信息")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "登录成功，返回JWT token和用户信息"),
+        @ApiResponse(responseCode = "401", description = "登录失败，用户名或密码错误")
+    })
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> login(@Parameter(description = "登录请求参数", required = true) @RequestBody LoginRequest loginRequest) {
         // 验证用户凭证
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
@@ -86,8 +97,13 @@ public class AuthController {
      * @param authorizationHeader 授权请求头
      * @return ResponseEntity 响应实体
      */
+    @Operation(summary = "获取当前用户信息", description = "获取当前登录用户的信息")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "获取成功，返回用户信息"),
+        @ApiResponse(responseCode = "401", description = "未授权，token无效或过期")
+    })
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String authorizationHeader) {
+    public ResponseEntity<?> getCurrentUser(@Parameter(description = "授权请求头，格式为Bearer token", required = true) @RequestHeader("Authorization") String authorizationHeader) {
         // 从请求头中获取token
         String token = authorizationHeader.substring(7); // 移除"Bearer "前缀
 
@@ -109,6 +125,10 @@ public class AuthController {
      * 或者可以实现token黑名单机制
      * @return ResponseEntity 响应实体
      */
+    @Operation(summary = "用户登出", description = "用户登出接口")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "登出成功")
+    })
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
         return ResponseEntity.ok("Logout successful");
@@ -119,8 +139,13 @@ public class AuthController {
      * @param registerRequest 注册请求
      * @return ResponseEntity 响应实体
      */
+    @Operation(summary = "用户注册", description = "用户注册接口，创建新用户")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "注册成功，返回用户信息"),
+        @ApiResponse(responseCode = "400", description = "注册失败，邮箱或用户名已存在")
+    })
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<?> register(@Parameter(description = "注册请求参数", required = true) @RequestBody RegisterRequest registerRequest) {
         // 检查邮箱是否已存在
         if (iUserMapper.existsByEmail(registerRequest.getEmail())) {
             throw new IllegalArgumentException("Email already exists");

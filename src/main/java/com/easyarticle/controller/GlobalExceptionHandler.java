@@ -4,8 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +16,7 @@ import java.util.Map;
  * 统一处理所有控制器的异常
  */
 @Slf4j
-@RestControllerAdvice
+@ControllerAdvice
 public class GlobalExceptionHandler {
 
     /**
@@ -24,6 +25,7 @@ public class GlobalExceptionHandler {
      * @return ResponseEntity 响应实体
      */
     @ExceptionHandler(BadCredentialsException.class)
+    @ResponseBody
     public ResponseEntity<?> handleBadCredentialsException(BadCredentialsException e) {
         log.error("Authentication error: ", e);
         return createErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid email or password");
@@ -35,6 +37,7 @@ public class GlobalExceptionHandler {
      * @return ResponseEntity 响应实体
      */
     @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseBody
     public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException e) {
         log.error("Invalid argument error: ", e);
         return createErrorResponse(HttpStatus.BAD_REQUEST, e.getMessage());
@@ -46,6 +49,7 @@ public class GlobalExceptionHandler {
      * @return ResponseEntity 响应实体
      */
     @ExceptionHandler(Exception.class)
+    @ResponseBody
     public ResponseEntity<?> handleException(Exception e) {
         log.error("Internal server error: ", e);
         return createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
