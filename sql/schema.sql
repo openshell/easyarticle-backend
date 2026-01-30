@@ -26,3 +26,23 @@ EXECUTE FUNCTION update_timestamp();
 -- 创建索引
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+
+-- 创建文章表
+CREATE TABLE IF NOT EXISTS articles (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 为articles表创建更新时间触发器
+CREATE TRIGGER update_articles_timestamp
+BEFORE UPDATE ON articles
+FOR EACH ROW
+EXECUTE FUNCTION update_timestamp();
+
+-- 创建索引
+CREATE INDEX IF NOT EXISTS idx_articles_user_id ON articles(user_id);
+CREATE INDEX IF NOT EXISTS idx_articles_created_at ON articles(created_at);

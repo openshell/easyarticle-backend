@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.easyarticle.repository.IArticleMapper">
+
+    <!-- 插入文章 -->
+    <insert id="insert" parameterType="com.easyarticle.entity.Article">
+        INSERT INTO articles (user_id, title, content, created_at, updated_at)
+        VALUES (#{userId}, #{title}, #{content}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    </insert>
+
+    <!-- 根据ID查询文章 -->
+    <select id="findById" resultType="com.easyarticle.entity.Article">
+        SELECT * FROM articles WHERE id = #{id}
+    </select>
+
+    <!-- 根据用户ID查询所有文章 -->
+    <select id="findByUserId" resultType="com.easyarticle.entity.Article">
+        SELECT * FROM articles WHERE user_id = #{userId} ORDER BY updated_at DESC
+    </select>
+
+    <!-- 更新文章 -->
+    <update id="update" parameterType="com.easyarticle.entity.Article">
+        UPDATE articles 
+        SET title = #{title}, content = #{content}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除文章 -->
+    <delete id="delete">
+        DELETE FROM articles WHERE id = #{id}
+    </delete>
+
+    <!-- 根据用户ID和文章ID查询文章 -->
+    <select id="findByUserIdAndId" resultType="com.easyarticle.entity.Article">
+        SELECT * FROM articles WHERE user_id = #{userId} AND id = #{id}
+    </select>
+
+</mapper>

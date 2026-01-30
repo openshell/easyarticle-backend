@@ -11,5 +11,6 @@ gen
 *-dem/
 **/logs/
 
-# 忽略spring-ai-langchain4j模块的本地配置文件
+# 忽略本地配置文件
 .env
+.trae/*
