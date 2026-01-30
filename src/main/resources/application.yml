@@ -9,8 +9,8 @@ spring:
     import: optional:file:.env[.properties]
   datasource:
     url: ${datasource_url}
-    username: ${datasource_passwd}
-    password: 3bPAAdCrJN3jCAt4
+    username: easyarticle
+    password: ${datasource_passwd}
   security:
     # 安全配置
     enabled: true
