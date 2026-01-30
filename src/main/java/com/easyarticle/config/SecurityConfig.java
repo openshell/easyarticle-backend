@@ -7,11 +7,14 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.AuthenticationFilter;
+
+import java.util.Collections;
 
 /**
  * 安全配置类
@@ -65,20 +68,27 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
+            .csrf(AbstractHttpConfigurer::disable)
+            // 配置CORS策略
+            .cors(cors -> cors
+                .configurationSource(request -> {
+                    org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
+                    configuration.setAllowedOriginPatterns(Collections.singletonList("*"));
+                    configuration.setAllowedMethods(Collections.singletonList("*"));
+                    configuration.setAllowedHeaders(Collections.singletonList("*"));
+                    configuration.setAllowCredentials(true);
+                    return configuration;
+                })
+            )
+            // 添加JWT认证过滤器，在AuthorizationFilter之前执行
+            .addFilterBefore(jwtAuthenticationFilter, AuthenticationFilter.class)
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/auth/**").permitAll()
-                // 允许访问swagger-ui相关路径
-                .requestMatchers( "/doc.html/**","/webjars/**",
-                        "/v3/api-docs/**","/swagger-ui/**",  "/api-docs/**", "/v2/api-docs",
-                        "/swagger-resources/**").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
-            // 添加JWT认证过滤器
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            );
 
         return http.build();
     }
